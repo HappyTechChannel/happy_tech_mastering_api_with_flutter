@@ -8,6 +8,7 @@ import 'package:happy_tech_mastering_api_with_flutter/core/functions/upload_imag
 import 'package:happy_tech_mastering_api_with_flutter/cubit/user_state.dart';
 import 'package:happy_tech_mastering_api_with_flutter/models/sign_in_model.dart';
 import 'package:happy_tech_mastering_api_with_flutter/models/sign_up_model.dart';
+import 'package:happy_tech_mastering_api_with_flutter/models/user_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
@@ -82,6 +83,20 @@ class UserCubit extends Cubit<UserState> {
       emit(SignInSuccess());
     } on ServerException catch (e) {
       emit(SignInFailure(errMessage: e.errModel.errorMessage));
+    }
+  }
+
+  getUserProfile() async {
+    try {
+      emit(GetUserLoading());
+      final response = await api.get(
+        EndPoint.getUserDataEndPoint(
+          CacheHelper().getData(key: ApiKey.id),
+        ),
+      );
+      emit(GetUserSuccess(user: UserModel.fromJson(response)));
+    } on ServerException catch (e) {
+      emit(GetUserFailure(errMessage: e.errModel.errorMessage));
     }
   }
 }
