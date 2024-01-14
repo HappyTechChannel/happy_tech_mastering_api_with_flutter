@@ -4,8 +4,10 @@ import 'package:happy_tech_mastering_api_with_flutter/cache/cache_helper.dart';
 import 'package:happy_tech_mastering_api_with_flutter/core/api/api_consumer.dart';
 import 'package:happy_tech_mastering_api_with_flutter/core/api/end_ponits.dart';
 import 'package:happy_tech_mastering_api_with_flutter/core/errors/exceptions.dart';
+import 'package:happy_tech_mastering_api_with_flutter/core/functions/upload_image_to_api.dart';
 import 'package:happy_tech_mastering_api_with_flutter/cubit/user_state.dart';
 import 'package:happy_tech_mastering_api_with_flutter/models/sign_in_model.dart';
+import 'package:happy_tech_mastering_api_with_flutter/models/sign_up_model.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
@@ -33,6 +35,36 @@ class UserCubit extends Cubit<UserState> {
   //Sign up confirm password
   TextEditingController confirmPassword = TextEditingController();
   SignInModel? user;
+
+  uploadProfilePic(XFile image) {
+    profilePic = image;
+    emit(UploadProfilePic());
+  }
+
+  signUp() async {
+    try {
+      emit(SignUpLoading());
+      final response = await api.post(
+        EndPoint.signUp,
+        isFromData: true,
+        data: {
+          ApiKey.name: signUpName.text,
+          ApiKey.phone: signUpPhoneNumber.text,
+          ApiKey.email: signUpEmail.text,
+          ApiKey.password: signUpPassword.text,
+          ApiKey.confirmPassword: confirmPassword.text,
+          ApiKey.location:
+              '{"name":"methalfa","address":"meet halfa","coordinates":[30.1572709,31.224779]}',
+          ApiKey.profilePic: await uploadImageToAPI(profilePic!)
+        },
+      );
+      final signUPModel = SignUpModel.fromJson(response);
+      emit(SignUpSuccess(message: signUPModel.message));
+    } on ServerException catch (e) {
+      emit(SignUpFailure(errMessage: e.errModel.errorMessage));
+    }
+  }
+
   signIn() async {
     try {
       emit(SignInLoading());
